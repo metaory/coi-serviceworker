@@ -7,12 +7,11 @@ const coi = new Proxy(
     shouldDeregister: false,
     coepCredentialless: true,
     coepDegrade: true,
-    doReload: window.location.reload,
+    doReload: this?.window?.location?.reload,
     quiet: false,
-    ...window?.coi,
   },
   {
-    get: (t, p) => window?.coi?.[p] ?? t[p] ?? null,
+    get: (t, p) => this?.window?.coi?.[p] ?? t[p] ?? null,
     set: () => true,
   },
 )
@@ -23,7 +22,7 @@ const log = new Proxy(
     get:
       (_, lvl) =>
       (msg, ...ctx) =>
-        window?.coi?.quiet || console[lvl in console ? lvl : 'debug'](NAME, msg, ...ctx),
+       this?.window?.coi?.quiet || console[lvl in console ? lvl : 'debug'](NAME, msg, ...ctx),
   },
 )
 
@@ -50,7 +49,7 @@ const registerWorker = () =>
     },
   )
 
-if (!window) {
+if (!this.window) {
   self.addEventListener('install', self.skipWaiting)
   self.addEventListener('activate', event => event.waitUntil(self.clients.claim()))
   self.addEventListener('message', ({ data }) => {
@@ -110,8 +109,8 @@ if (!window) {
           newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin')
 
           return new Response(body, {
-            status: status,
-            statusText: statusText,
+            status,
+            statusText,
             headers: newHeaders,
           })
         })
@@ -123,7 +122,7 @@ if (!window) {
 // TODO: fix: Excessive complexity of 18 detected (max: 15).
 //  [lint/complexity/noExcessiveCognitiveComplexity
 queueMicrotask(() => {
-  if (!window) {
+  if (!this.window) {
     return log.warn('No window')
   }
 
@@ -159,7 +158,7 @@ queueMicrotask(() => {
 
   // Perhaps COOP/COEP are already set from the origin server
   // or the browser has no notion of crossOriginIsolated
-  if (!window.crossOriginIsolated) {
+  if (window.crossOriginIsolated) {
     return log.debug('Not registered', 'secure context is required')
   }
 
